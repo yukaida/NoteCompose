@@ -12,5 +12,19 @@ class ListViewModel : ViewModel() {
         _name.postValue(newName)
     }
 
+    //----------------------
+    private val _intList = MutableLiveData<MutableList<Int>>(mutableListOf(0))
+    val intList: LiveData<MutableList<Int>> get() = _intList
+    private val newList = mutableListOf<Int>()
+    fun refreshNameList() {
+        _intList.value?.let {
+            newList.clear()
+            repeat(100) {
+                newList.add((0..100).random())
+            }
+            _intList.value = newList
+        }
+
+    }
 
 }
