@@ -13,7 +13,7 @@ class ListViewModel : ViewModel() {
     }
 
     //----------------------
-    private val _intList = MutableLiveData<MutableList<Int>>(mutableListOf(0))
+    private val _intList = MutableLiveData<MutableList<Int>>(mutableListOf())
     val intList: LiveData<MutableList<Int>> get() = _intList
     private val newList = mutableListOf<Int>()
     fun refreshNameList() {

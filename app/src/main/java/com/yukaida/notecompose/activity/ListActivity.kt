@@ -63,7 +63,7 @@ fun ListLayout(
     ConstraintLayout {
         val name = vm.name.observeAsState().value.toString()
         val intList = vm.intList.observeAsState().value
-
+        //约束引用
         val (lazyColumnRef, buttonRef, textRef) = createRefs()
 
         Text(text = name, Modifier.constrainAs(textRef) {
