@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">NoteCompose</string>
     <string name="title_activity_list">ListActivity</string>
+    <string name="title_activity_composable">ComposableActivity</string>
 </resources>

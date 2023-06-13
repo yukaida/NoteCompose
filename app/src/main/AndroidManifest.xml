@@ -16,15 +16,26 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".activity.ListActivity"
+            android:name=".activity.ComposableActivity"
             android:exported="true"
-            android:label="@string/title_activity_list"
+            android:label="@string/title_activity_composable"
             android:theme="@style/Theme.NoteCompose">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".activity.ListActivity"
+            android:exported="true"
+            android:label="@string/title_activity_list"
+            android:theme="@style/Theme.NoteCompose">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".viewActivity.ViewActivity"
@@ -35,11 +46,13 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.NoteCompose">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
 
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
     </application>
 
