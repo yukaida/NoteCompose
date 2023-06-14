@@ -2,4 +2,5 @@
     <string name="app_name">NoteCompose</string>
     <string name="title_activity_list">ListActivity</string>
     <string name="title_activity_composable">ComposableActivity</string>
+    <string name="test_content">这是一段测试用的文本</string>
 </resources>

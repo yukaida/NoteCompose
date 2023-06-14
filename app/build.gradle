@@ -81,7 +81,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
 
 
-    implementation "androidx.compose.runtime:runtime-livedata:1.5.0-alpha03"
+    implementation "androidx.compose.runtime:runtime-livedata:1.5.0-beta02"
 
     //协程
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
