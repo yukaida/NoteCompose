@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,10 +45,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -63,6 +68,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.platform.textInputServiceFactory
 import androidx.compose.ui.res.colorResource
@@ -85,6 +91,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.constraintlayout.compose.ChainStyle
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import com.yukaida.notecompose.R
 import com.yukaida.notecompose.activity.ui.theme.NoteComposeTheme
 import com.yukaida.notecompose.activity.ui.theme.horizontalGradientBrush
@@ -121,7 +130,6 @@ class ComposableActivity : ComponentActivity() {
 
 @Composable
 fun MainLayout() {
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -264,6 +272,12 @@ fun MainLayout() {
             }
 
             Column {
+                MenuSample()
+                ChainSample()
+                BarrierSample()
+                ConstraintLayoutSample()
+                SurfaceSample()
+                CardTextSample()
                 ProgressSample()
                 AlertDialogSample()
                 DialogSample()
@@ -283,20 +297,206 @@ fun MainLayout() {
 }
 
 @Composable
+fun MenuSample() {
+    val menuExpanded by remember {
+        mutableStateOf(false)
+    }
+//    KSurface {
+    Menu(options = listOf("1", "2", "3"), expanded = menuExpanded, {})
+//    }
+}
+
+@Composable
+fun Menu(options: List<String>, expanded: Boolean, onDismissRequest: () -> Unit) {
+    DropdownMenu(expanded = expanded, onDismissRequest = { onDismissRequest }) {
+//        Column() {
+        options.forEach { option ->
+            Text(text = option, modifier = Modifier
+                .padding(16.dp)
+                .clickable {
+//                    expanded = false
+                })
+
+//            }
+        }
+    }
+}
+
+@Composable
+fun ChainSample() {
+    KSurface {
+        ConstraintLayout {
+            val (a, b, c, d) = createRefs()
+            createVerticalChain(a, b, c, d, chainStyle = ChainStyle.Spread)
+            Text(text = "   a   ", modifier = Modifier.constrainAs(a) {})
+            Text(text = "   b   ", modifier = Modifier.constrainAs(b) {})
+            Text(text = "   c   ", modifier = Modifier.constrainAs(c) {})
+            Text(text = "   d   ", modifier = Modifier.constrainAs(d) {})
+        }
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BarrierSample() {
+    var name by remember {
+        mutableStateOf("")
+    }
+    var password by remember {
+        mutableStateOf("")
+    }
+//    var barrier =
+//    KSurface {
+    ConstraintLayout(modifier = Modifier.wrapContentSize()) {
+        val (textName, textPassword, textFieldName, textFieldPassword) = createRefs()
+        val textEndBarrier = createEndBarrier(textName, textPassword)
+
+        Text(text = "用户名", modifier = Modifier.constrainAs(textName) {
+            top.linkTo(parent.top)
+            start.linkTo(parent.start)
+        })
+        Text(text = "密码", modifier = Modifier.constrainAs(textPassword) {
+            top.linkTo(textName.bottom, 64.dp)
+            start.linkTo(parent.start)
+        })
+        TextField(
+            value = name,
+            onValueChange = { name = it },
+            modifier = Modifier.constrainAs(textFieldName) {
+                top.linkTo(parent.top)
+                start.linkTo(textEndBarrier, 8.dp)
+            })
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            modifier = Modifier.constrainAs(textFieldPassword) {
+                top.linkTo(textPassword.top)
+                start.linkTo(textEndBarrier, 8.dp)
+            })
+    }
+//    }
+}
+
+@Composable
+fun KSurface(content: @Composable () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = Color.LightGray, shadowElevation = 10.dp,
+        modifier = Modifier
+            .padding(16.dp)
+            .border(1.dp, Color.Red)
+            .padding(8.dp)
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun ConstraintLayoutSample() {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = Color.LightGray, shadowElevation = 10.dp,
+        modifier = Modifier
+            .padding(16.dp)
+            .border(1.dp, Color.Red)
+            .padding(8.dp)
+    ) {
+        ConstraintLayout(modifier = Modifier.wrapContentSize()) {
+            val (imageRef, titleRef, contentRef) = remember {
+                createRefs()
+            }
+
+            Image(painter = painterResource(id = R.drawable.android_robot),
+                contentDescription = null,
+                Modifier
+                    .size(48.dp)
+                    .constrainAs(imageRef) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        bottom.linkTo(parent.bottom)
+                    })
+
+            Text(text = "Compose 技术爱好者",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.constrainAs(titleRef) {
+                    top.linkTo(parent.top)
+                    start.linkTo(imageRef.end, 8.dp)
+                    end.linkTo(parent.end)
+                })
+
+            Text(text = "我的个人描述...",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.constrainAs(contentRef) {
+                    top.linkTo(titleRef.bottom, 8.dp)
+                    start.linkTo(imageRef.end, 8.dp)
+                    end.linkTo(parent.end)
+                })
+
+        }
+    }
+
+}
+
+@Composable
+fun SurfaceSample() {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        shadowElevation = 8.dp,
+        color = Color.Cyan,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Row() {
+            Image(
+                painter = painterResource(id = R.drawable.cat_square),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp, 0.dp, 0.dp, 8.dp))
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Column(
+                modifier = Modifier
+                    .padding(16.dp, 0.dp)
+                    .height(64.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(text = "Liratie")
+                Text(text = "礼谙")
+            }
+        }
+    }
+}
+
+@Composable
+fun CardTextSample() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(8.dp),
+        shadowElevation = 10.dp
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(text = "JetPack Compose是什么", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
 fun ProgressSample() {
     var progress by remember {
         mutableStateOf(0.1f)
     }
     val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+        targetValue = progress, animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
     )
 
     Column {
         CircularProgressIndicator(progress = animatedProgress)
         OutlinedButton(onClick = {
             if (progress < 1f) {
-                progress +=0.1f
+                progress += 0.1f
             }
         }) {
             Text("add")
@@ -308,11 +508,10 @@ fun ProgressSample() {
 @Composable
 fun AlertDialogSample() {
     val openDialog = remember {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
     if (openDialog.value) {
-        AlertDialog(
-            title = { Text(text = "开启位置服务") },
+        AlertDialog(title = { Text(text = "开启位置服务") },
             text = { Text(text = "这将意味着,我们会给您提供精准的位置服务,并且您将接收关于您订阅的位置信息") },
             onDismissRequest = { openDialog.value = false },
             confirmButton = {
@@ -321,7 +520,8 @@ fun AlertDialogSample() {
                 }) {
                     Text(text = "确定")
                 }
-            }, dismissButton = {
+            },
+            dismissButton = {
                 Button(onClick = {
                     openDialog.value = false
                 }) {
@@ -338,12 +538,8 @@ fun DialogSample() {
     }
     if (showState) {
         Dialog(
-            onDismissRequest = { showState = false },
-            properties = DialogProperties(
-                true,
-                true,
-                usePlatformDefaultWidth = false,
-                decorFitsSystemWindows = true
+            onDismissRequest = { showState = false }, properties = DialogProperties(
+                true, true, usePlatformDefaultWidth = false, decorFitsSystemWindows = true
             )
         ) {
             Surface(
@@ -451,37 +647,31 @@ fun NameInputTextField() {
         mutableStateOf(true)
     }
 
-    OutlinedTextField(
-        value = nameInput,
-        onValueChange = {
-            nameInput = it
-            isNameInputError = it != "余凯达"
-        }, isError = isNameInputError,
-        label = { Text(text = "name") },
-        leadingIcon = {
-            Image(
-                painter = painterResource(id = R.drawable.cat_square),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-            )
-        },
-        trailingIcon = {
-            IconButton(
-                onClick = {
-                    Log.d(TAG, "trailingIcon onClicked ")
-                }, modifier = Modifier
-                    .size(32.dp)
+    OutlinedTextField(value = nameInput, onValueChange = {
+        nameInput = it
+        isNameInputError = it != "余凯达"
+    }, isError = isNameInputError, label = { Text(text = "name") }, leadingIcon = {
+        Image(
+            painter = painterResource(id = R.drawable.cat_square),
+            contentDescription = null,
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+        )
+    }, trailingIcon = {
+        IconButton(
+            onClick = {
+                Log.d(TAG, "trailingIcon onClicked ")
+            }, modifier = Modifier.size(32.dp)
 
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.android_robot),
-                    contentDescription = null,
-                    modifier = Modifier.clip(CircleShape)
-                )
-            }
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.android_robot),
+                contentDescription = null,
+                modifier = Modifier.clip(CircleShape)
+            )
         }
+    }
 
     )
 }
@@ -492,14 +682,12 @@ fun BasicTextFieldSample() {
         mutableStateOf("")
     }
 
-    BasicTextField(
-        modifier = Modifier.width(300.dp),
+    BasicTextField(modifier = Modifier.width(300.dp),
         value = text,
         onValueChange = { text = it },
         decorationBox = { innerTextField ->
             Box(
-                modifier = Modifier
-                    .background(Color.White, RoundedCornerShape(16.dp)),
+                modifier = Modifier.background(Color.White, RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Row(
