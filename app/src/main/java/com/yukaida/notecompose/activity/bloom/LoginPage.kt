@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.yukaida.notecompose.activity.ui.theme.bloomShapes
 import com.yukaida.notecompose.activity.ui.theme.body2
 import com.yukaida.notecompose.activity.ui.theme.h1
@@ -36,11 +38,11 @@ import com.yukaida.notecompose.ui.theme.white
 @Preview
 @Composable
 fun LoginPagePreview() {
-    LoginPage()
+    LoginPage(rememberNavController())
 }
 
 @Composable
-fun LoginPage() {
+fun LoginPage(navController: NavController) {
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -55,7 +57,18 @@ fun LoginPage() {
         )
         LoginInputBox()
         HintWithUnderLine()
-        LoginButton()
+        Button(
+            onClick = {
+                navController.navigate("home") { popUpTo("welcome") { inclusive = true } }
+            },
+            Modifier
+                .fillMaxWidth()
+                .clip(bloomShapes.medium)
+                .padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(contentColor = pink900)
+        ) {
+            Text(text = "Log in", style = textButtonStyle, color = white)
+        }
     }
 }
 
@@ -116,21 +129,5 @@ fun BottomText() {
             color = gray,
             textDecoration = TextDecoration.Underline
         )
-    }
-}
-
-@Composable
-fun LoginButton() {
-    Button(
-        onClick = {
-
-        },
-        Modifier
-            .fillMaxWidth()
-            .clip(bloomShapes.medium)
-            .padding(top = 16.dp),
-        colors = ButtonDefaults.buttonColors(contentColor = pink900)
-    ) {
-        Text(text = "Log in", style = textButtonStyle, color = white)
     }
 }

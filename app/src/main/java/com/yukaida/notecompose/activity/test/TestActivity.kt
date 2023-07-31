@@ -35,9 +35,16 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.with
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,10 +56,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -99,6 +108,7 @@ import androidx.compose.ui.layout.FirstBaseline
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -106,6 +116,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.UiMode
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -114,21 +125,24 @@ import com.yukaida.notecompose.R
 import com.yukaida.notecompose.activity.bloom.AnimateFavButton
 import com.yukaida.notecompose.activity.bloom.AnimatedShimmerItem
 import com.yukaida.notecompose.activity.bloom.ButtonState
+import com.yukaida.notecompose.activity.bloom.roundedCornerShape
 import com.yukaida.notecompose.activity.test.ui.theme.NoteComposeTheme
 import com.yukaida.notecompose.ui.theme.purple500
 import kotlinx.coroutines.selects.select
+import kotlin.math.round
+import kotlin.math.roundToInt
 
 private const val TAG = "TestActivity"
 
 class TestActivity : ComponentActivity() {
+    @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             NoteComposeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
 //                    val vm: TextViewModel = viewModel()
 //                    CounterScreen(vm)
@@ -138,10 +152,13 @@ class TestActivity : ComponentActivity() {
 //                    LaunchedEffect(key1 = "1", block = {
 //                        Log.d(TAG, "onCreate: ${Thread.currentThread().name}")
 //                    })
-                    Column() {
-                        AnimateFavButton(modifier = Modifier)
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        AnimateFavButton()
+                        Spacer(modifier = Modifier.size(16.dp))
+                        DraggableBox()
+                        Spacer(modifier = Modifier.size(16.dp))
+//                        SwipeableSample()
                     }
-
                 }
             }
         }
@@ -172,8 +189,7 @@ fun CounterScreen(vm: TextViewModel, modifier: Modifier = Modifier) {
             AnimatedContent(targetState = vm.counter.value) {
                 Text(
                     text = vm.counter.value.toString(),
-                    modifier = Modifier
-                        .size(200.dp, 100.dp),
+                    modifier = Modifier.size(200.dp, 100.dp),
                     textAlign = TextAlign.Center
                 )
             }
@@ -343,17 +359,15 @@ fun LoadingProgressBar() {
             Text(text = "${progressAngle / 360 * 100}%")
         }
 
-        Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp)
-                .drawBehind {
+        Canvas(modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .drawBehind {
 //                    drawRoundRect(color = Color.Green)
-                }
-                .drawWithContent {
-                    drawContent()
-                }
-        ) {
+            }
+            .drawWithContent {
+                drawContent()
+            }) {
             drawCircle(color = Color.Black, style = Stroke(20.dp.toPx()))
             drawArc(
                 color = Color.Red,
@@ -453,16 +467,14 @@ fun SwitchBlock() {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .size(150.dp)
-            .padding(8.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .clickable {
-                selectState =
-                    if (selectState == SwitchState.OPEN) SwitchState.CLOSE else SwitchState.OPEN
-            }
-    ) {
+    Box(modifier = Modifier
+        .size(150.dp)
+        .padding(8.dp)
+        .clip(RoundedCornerShape(10.dp))
+        .clickable {
+            selectState =
+                if (selectState == SwitchState.OPEN) SwitchState.CLOSE else SwitchState.OPEN
+        }) {
         Image(
             painter = painterResource(id = R.drawable.cat_square),
             contentDescription = null,
@@ -484,7 +496,8 @@ fun SwitchBlock() {
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_home),
-                    contentDescription = null, tint = Color.White
+                    contentDescription = null,
+                    tint = Color.White
                 )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
@@ -502,11 +515,8 @@ fun SwitchBlock() {
 fun InfiniteAnimationBox() {
     val infiniteTransition = rememberInfiniteTransition()
     val color by infiniteTransition.animateColor(
-        initialValue = Color.Red,
-        targetValue = Color.Green,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+        initialValue = Color.Red, targetValue = Color.Green, animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing), repeatMode = RepeatMode.Reverse
         )
     )
     Box(
@@ -526,8 +536,7 @@ fun AlphaBox() {
         mutableStateOf(true)
     }
     val alpha by animateFloatAsState(
-        targetValue = if (enable) 1f else 0f,
-        animationSpec = tween(2000, 0, FastOutSlowInEasing)
+        targetValue = if (enable) 1f else 0f, animationSpec = tween(2000, 0, FastOutSlowInEasing)
     )
 
     val value by animateFloatAsState(
@@ -535,17 +544,14 @@ fun AlphaBox() {
         animationSpec = spring(Spring.DampingRatioHighBouncy, Spring.StiffnessMedium)
     )
 
-    Box(
-        modifier = Modifier
-            .size(80.dp)
-            .background(Color.Blue)
-            .alpha(alpha)
-            .clickable {
-                enable = !enable
-                Log.d(TAG, "AlphaBox: $alpha")
-            }
-    ) {
-    }
+    Box(modifier = Modifier
+        .size(80.dp)
+        .background(Color.Blue)
+        .alpha(alpha)
+        .clickable {
+            enable = !enable
+            Log.d(TAG, "AlphaBox: $alpha")
+        }) {}
 
     Image(painter = painterResource(id = R.drawable.cat_square),
         contentDescription = null,
@@ -559,10 +565,7 @@ fun AlphaBox() {
 }
 
 data class UiState(
-    val backgroundColor: Color,
-    val textColor: Color,
-    val roundedCorner: Int,
-    val buttonWidth: Dp
+    val backgroundColor: Color, val textColor: Color, val roundedCorner: Int, val buttonWidth: Dp
 )
 
 
@@ -573,20 +576,14 @@ const val animateDuration = 3000
 fun AnimatedFavButton(modifier: Modifier = Modifier) {
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
     Box(modifier) {
-        AnimatedContent(targetState = buttonState,
-            transitionSpec = {
-                fadeIn(tween(durationMillis = animateDuration)) with
-                        fadeOut(tween(durationMillis = animateDuration)) using
-                        SizeTransform { initialSize, targetSize ->
-                            tween(durationMillis = animateDuration)
-                        }
-            }) { state ->
+        AnimatedContent(targetState = buttonState, transitionSpec = {
+            fadeIn(tween(durationMillis = animateDuration)) with fadeOut(tween(durationMillis = animateDuration)) using SizeTransform { initialSize, targetSize ->
+                tween(durationMillis = animateDuration)
+            }
+        }) { state ->
             FavButton(buttonState = state) {
-                buttonState =
-                    if (buttonState == ButtonState.Idle)
-                        ButtonState.Pressed
-                    else
-                        ButtonState.Idle
+                buttonState = if (buttonState == ButtonState.Idle) ButtonState.Pressed
+                else ButtonState.Idle
             }
         }
     }
@@ -609,9 +606,7 @@ fun FavButton(
         colors = ButtonDefaults.buttonColors(backgroundColor),
         onClick = onClick,
     ) {
-        if (buttonState == ButtonState.Idle
-            && textColor == ButtonState.Idle.ui.textColor
-        ) {
+        if (buttonState == ButtonState.Idle && textColor == ButtonState.Idle.ui.textColor) {
             Icon(
                 tint = textColor,
                 imageVector = Icons.Default.Favorite,
@@ -639,3 +634,98 @@ fun FavButton(
         }
     }
 }
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun DraggableBox() {
+
+    var offsetX by remember {
+        mutableStateOf(0f)
+    }
+
+    val boxSideLengthDp = 50.dp
+
+    val boxSideLengthPx = with(LocalDensity.current) {
+        boxSideLengthDp.toPx()
+    }
+
+    val draggableState = rememberDraggableState {
+        offsetX = (offsetX + it).coerceIn(-boxSideLengthPx, boxSideLengthPx)
+    }
+
+    Box(
+        modifier = Modifier
+            .size(boxSideLengthDp * 3, boxSideLengthDp * 3)
+            .background(Color.Green, RoundedCornerShape(16.dp))
+            .wrapContentSize()
+            .combinedClickable(enabled = true, onLongClick = {
+                Log.d(TAG, " onLongClick")
+            }, onDoubleClick = {
+                Log.d(TAG, "onDoubleClick")
+            }, onClick = {
+                Log.d(TAG, "onClick2 ")
+            })
+
+    ) {
+
+        Text(text = "Drag",
+            modifier = Modifier
+                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                .draggable(draggableState, Orientation.Horizontal)
+                .size(boxSideLengthDp)
+                .background(Color.Red, roundedCornerShape),
+            textAlign = TextAlign.Center)
+    }
+}
+
+@Composable
+fun SwipeAbleDemo() {
+    var blockSize = 48.dp
+    var blockSizePx = with(LocalDensity.current) { blockSize.toPx() }
+//    var swipebaleState=rememberSwipeableState(0)
+}
+//enum class DragValue { Start, Center, End }
+//@ExperimentalFoundationApi
+//@Composable
+//fun SwipeableSample() {
+//
+//    @Composable
+//    fun AnchoredDraggableBox() {
+//        val anchors = DraggableAnchors {
+//            DragValue.Start at -100.dp.toPx()
+//            DragValue.Center at 0f
+//            DragValue.End at 100.dp.toPx()
+//        }
+//        val state = remember {
+//            AnchoredDraggableState(anchors = anchors)
+//        }
+//        Box(
+//            Modifier.offset { IntOffset(x = state.requireOffset(), y = 0) }
+//        )
+//    }
+////    val width = 96.dp
+////    val squareSize = 48.dp
+////
+////    val swipeableState = AnchoredDraggableState(0)
+////    val sizePx = with(LocalDensity.current) { squareSize.toPx() }
+////    val anchors = mapOf(0f to 0, sizePx to 1) // Maps anchor points (in px) to states
+////
+////    Box(
+////        modifier = Modifier
+////            .width(width)
+////            .swipeable(
+////                state = swipeableState,
+////                anchors = anchors,
+////                thresholds = { _, _ -> FractionalThreshold(0.3f) },
+////                orientation = Orientation.Horizontal
+////            )
+////            .background(Color.LightGray)
+////    ) {
+////        Box(
+////            Modifier
+////                .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+////                .size(squareSize)
+////                .background(Color.DarkGray)
+////        )
+////    }
+//}

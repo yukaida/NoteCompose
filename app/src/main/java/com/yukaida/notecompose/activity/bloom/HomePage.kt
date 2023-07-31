@@ -1,6 +1,7 @@
 package com.yukaida.notecompose.activity.bloom
 
 import android.annotation.SuppressLint
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +23,11 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -37,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -48,6 +55,13 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.Placeholder
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.google.android.material.bottomnavigation.BottomNavigationItemView
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -61,23 +75,37 @@ import com.yukaida.notecompose.ui.theme.white
 @Preview
 @Composable
 fun HomePagePreview() {
-    HomePage()
+    HomePage(rememberNavController())
 }
+
+
+sealed class Screen(
+    val route: String, @StringRes val resourceId: Int, val icon: ImageVector
+) {
+    object Home : Screen("home", R.string.home, Icons.Filled.Home)
+    object Favorite : Screen("favorite", R.string.favorite, Icons.Filled.Favorite)
+    object Profie : Screen("profie", R.string.profie, Icons.Filled.Menu)
+    object Cart : Screen("cart", R.string.cart, Icons.Filled.ThumbUp)
+}
+
+
+val items = listOf(Screen.Home, Screen.Favorite, Screen.Profie, Screen.Cart)
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomePage() {
-    Scaffold(bottomBar = { BottomBar() }) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(white)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+fun HomePage(navController: NavController) {
+    val bottomNavController = rememberNavController()
+    Scaffold(bottomBar = { BottomBar(bottomNavController) }) {
+        NavHost(
+            navController = bottomNavController,
+            startDestination = Screen.Home.route,
+            modifier = Modifier.padding(it)
         ) {
-            SearchBar()
-            BloomRowBanner()
-            BloomInfoList()
+            composable(Screen.Home.route) { LoginPage(navController = bottomNavController) }
+            composable(Screen.Favorite.route) { WelcomeContent(navController = bottomNavController) }
+            composable(Screen.Profie.route) { LoginPage(navController = bottomNavController) }
+            composable(Screen.Cart.route) { WelcomeContent(navController = bottomNavController) }
         }
     }
 }
@@ -112,7 +140,8 @@ val navList = listOf(
 fun SearchBar() {
     Box() {
         TextField(
-            value = "", onValueChange = {},
+            value = "",
+            onValueChange = {},
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -131,8 +160,7 @@ fun SearchBar() {
                 Text(text = "Search", style = textButtonStyle, color = gray)
             },
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = white,
-                focusedBorderColor = white
+                unfocusedBorderColor = white, focusedBorderColor = white
             )
         )
     }
@@ -154,7 +182,8 @@ fun PlantCard(plant: ImageItem) {
         Image(
             painter = painterResource(id = plant.resId),
             contentDescription = null,
-            contentScale = ContentScale.Crop, modifier = Modifier
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(96.dp)
         )
@@ -214,16 +243,14 @@ fun DesignCard(plant: ImageItem) {
 
         Column() {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column() {
                     Text(
                         text = plant.name,
                         style = MaterialTheme.typography.headlineMedium,
                         color = gray,
-                        modifier = Modifier
-                            .paddingFromBaseline(top = 24.dp)
+                        modifier = Modifier.paddingFromBaseline(top = 24.dp)
                     )
                     Text(
                         text = "This is a description",
@@ -258,8 +285,7 @@ fun BloomInfoList() {
                 text = "Design your home garden",
                 style = MaterialTheme.typography.headlineSmall,
                 color = Color.Black,
-                modifier = Modifier
-                    .paddingFromBaseline(top = 40.dp)
+                modifier = Modifier.paddingFromBaseline(top = 40.dp)
             )
             Icon(
                 painterResource(id = R.drawable.ic_filter_list),
@@ -271,8 +297,7 @@ fun BloomInfoList() {
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(bottom = 56.dp)
+            modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = 56.dp)
         ) {
             items(bloomInfoList.size) {
                 if (it != 0) {
@@ -286,25 +311,39 @@ fun BloomInfoList() {
 
 
 @Composable
-fun BottomBar() {
+fun BottomBar(navController: NavController) {
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .background(pink100)
     ) {
-        navList.forEach() {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+
+        items.forEach() { screen ->
             NavigationBarItem(
-                selected = ("Home" == it.name),
-                onClick = { },
+                selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                onClick = {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
                 icon = {
                     Icon(
-                        painter = painterResource(id = it.resId),
+                        imageVector = screen.icon,
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                label = { Text(text = it.name, style = caption, color = gray) })
+                label = { Text(text = screen.route, style = caption, color = gray) },
+
+
+                )
         }
     }
 }

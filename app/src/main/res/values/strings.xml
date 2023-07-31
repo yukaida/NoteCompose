@@ -5,4 +5,12 @@
     <string name="test_content">这是一段测试用的文本</string>
     <string name="title_activity_bloom">BloomActivity</string>
     <string name="title_activity_test">TestActivity</string>
+    <string name="title_activity_navigation">NavigationActivity</string>
+
+    <string name="home">home</string>
+    <string name="favorite">favorite</string>
+    <string name="profie">profie</string>
+    <string name="cart">cart</string>
+    <string name="title_activity_zkactivity">ZKActivity</string>
+    <string name="title_activity_we_compose">WeComposeActivity</string>
 </resources>

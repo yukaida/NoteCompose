@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
+import com.yukaida.notecompose.test.RenScreen
 import com.yukaida.notecompose.ui.theme.NoteComposeTheme
 import com.yukaida.notecompose.viewActivity.ViewActivity
 import kotlinx.coroutines.launch
@@ -87,7 +88,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    RenScreen()
                 }
             }
         }
